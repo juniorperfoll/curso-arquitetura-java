@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curso de Arquitetura Java</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: barra lateral com a trilha + coluna de leitura (~68ch) + gaveta do mentor à direita */
+:root{
+  --bg:#f4f6f8; --surface:#ffffff; --ink:#15202b; --muted:#5a6876; --line:#d9e0e7;
+  --accent:#0b6e8a; --accent-ink:#ffffff; --accent-soft:#e3f1f5;
+  --java:#c9622b; --java-soft:#fbede4;
+  --good:#1f7a4d; --good-soft:#e2f3ea; --bad:#b3261e; --bad-soft:#fbe7e5;
+  --code-bg:#0f1b26; --code-ink:#dbe6ef; --code-k:#ff9e64; --code-s:#9ece6a; --code-c:#6b7f91; --code-t:#7dcfff; --code-a:#e0af68;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e141a; --surface:#151e27; --ink:#e4ebf1; --muted:#93a3b2; --line:#26333f;
+    --accent:#4fb3d0; --accent-ink:#06222c; --accent-soft:#12303b;
+    --java:#ef8a52; --java-soft:#3a2418;
+    --good:#5cc98f; --good-soft:#123323; --bad:#ff8a80; --bad-soft:#3b1a18;
+    --code-bg:#0a1118;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e141a; --surface:#151e27; --ink:#e4ebf1; --muted:#93a3b2; --line:#26333f;
+  --accent:#4fb3d0; --accent-ink:#06222c; --accent-soft:#12303b;
+  --java:#ef8a52; --java-soft:#3a2418;
+  --good:#5cc98f; --good-soft:#123323; --bad:#ff8a80; --bad-soft:#3b1a18;
+  --code-bg:#0a1118;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.65 var(--font-body);}
+a{color:var(--accent)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.app{display:grid;grid-template-columns:300px minmax(0,1fr);height:100%}
+/* Sidebar */
+.side{background:var(--surface);border-right:1px solid var(--line);overflow-y:auto;display:flex;flex-direction:column}
+.brand{padding:20px 20px 14px;border-bottom:1px solid var(--line)}
+.brand a{text-decoration:none;color:inherit}
+.brand h1{font:700 20px/1.15 var(--font-display);margin:0;letter-spacing:-.01em}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.progress-total{margin-top:12px}
+.bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar>span{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.progress-total small{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-top:6px;font-variant-numeric:tabular-nums}
+.nav{padding:8px 10px 24px}
+.nav details{border-radius:8px}
+.nav summary{list-style:none;display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:9px 10px;border-radius:8px;font-weight:600;font-size:14px}
+.nav summary::-webkit-details-marker{display:none}
+.nav summary:hover{background:var(--bg)}
+.nav .num{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font:600 12px var(--font-mono);background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.nav .done .num{background:var(--good);border-color:var(--good);color:#fff}
+.nav .pct{font:500 11px var(--font-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.nav ul{list-style:none;margin:0 0 6px;padding:0 0 0 46px}
+.nav li a{display:flex;gap:8px;align-items:baseline;text-decoration:none;color:var(--ink);font-size:13.5px;padding:5px 8px;border-radius:6px;line-height:1.35}
+.nav li a:hover{background:var(--bg)}
+.nav li a.cur{background:var(--accent-soft);color:var(--ink);font-weight:500}
+.nav li a .tick{flex:0 0 14px;color:var(--line);font-size:12px}
+.nav li a.ok .tick{color:var(--good)}
+.nav .phase-link{font-size:12.5px;color:var(--muted)}
+.side-foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.save-state{display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.dot.on{background:var(--good)}
+/* Main */
+.main{overflow-y:auto;position:relative}
+.topbar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 28px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.crumb{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crumb a{color:var(--muted)}
+.btn.menu-btn{display:none}
+[hidden]{display:none!important}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.good{background:var(--good);border-color:var(--good);color:#fff}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.content{max-width:820px;margin:0 auto;padding:32px 28px 96px}
+.eyebrow{font:600 12px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--java)}
+h2.title{font:700 clamp(28px,4vw,38px)/1.1 var(--font-display);letter-spacing:-.02em;margin:8px 0 12px;text-wrap:balance}
+.lead{font-size:18px;color:var(--muted);max-width:68ch;margin:0 0 20px}
+.prose{max-width:68ch}
+.prose h3{font:700 22px/1.25 var(--font-display);margin:36px 0 10px;text-wrap:balance}
+.prose h4{font:600 17px/1.3 var(--font-body);margin:24px 0 6px}
+.prose p,.prose li{margin:0 0 12px}
+.prose ul,.prose ol{padding-left:22px}
+.prose code{font:500 .88em var(--font-mono);background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+.prose table{border-collapse:collapse;width:100%;font-size:14.5px;margin:12px 0 18px}
+.prose th,.prose td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.prose th{font-weight:600;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.03em}
+.table-wrap{overflow-x:auto}
+.callout{border-left:3px solid var(--java);background:var(--java-soft);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0}
+.callout.info{border-color:var(--accent);background:var(--accent-soft)}
+.callout b{display:block;margin-bottom:2px}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px}
+.chip{font:500 12.5px var(--font-mono);padding:4px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+.chip.java{background:var(--java-soft);border-color:transparent;color:var(--java)}
+.chip.ok{background:var(--good-soft);border-color:transparent;color:var(--good)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin:20px 0}
+.card h3{margin-top:0}
+.objs{margin:0;padding-left:20px}
+/* Code */
+.code{position:relative;margin:16px 0 20px;border-radius:10px;background:var(--code-bg);overflow:hidden}
+.code-head{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;font:500 12px var(--font-mono);color:#8fa3b5;border-bottom:1px solid #1e2d3b}
+.code-head button{background:transparent;border:1px solid #2a3c4d;color:#c5d3df;border-radius:6px;padding:2px 10px;font:500 12px var(--font-mono)}
+.code pre{margin:0;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--font-mono);color:var(--code-ink);tab-size:4}
+.tk-k{color:var(--code-k)} .tk-s{color:var(--code-s)} .tk-c{color:var(--code-c);font-style:italic} .tk-t{color:var(--code-t)} .tk-a{color:var(--code-a)} .tk-n{color:#bb9af7}
+
+.code-head{flex-wrap:wrap;gap:6px 10px}
+.code-head .fp{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 320px}
+.code-head .fp code{color:#e6edf3;font:600 12.5px var(--font-mono);overflow-wrap:anywhere}
+.code-head .btns{display:flex;gap:6px}
+.code-sub{padding:6px 14px;font:12.5px/1.45 var(--font-body);color:#b7c6d3;border-bottom:1px solid #1e2d3b;background:#132331}
+.mode{font:600 10.5px var(--font-mono);letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:4px;white-space:nowrap;flex:0 0 auto}
+.mode-n{background:#1f6f8b;color:#fff}.mode-e{background:#b5612c;color:#fff}.mode-t{background:#3b4a58;color:#e6edf3}.mode-r{background:transparent;color:#8fa3b5;border:1px solid #3b4a58}
+.files{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0 0}
+.files td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.files td:first-child{width:1%;white-space:nowrap}
+.files .path{font:500 12.5px var(--font-mono);overflow-wrap:anywhere;color:var(--ink)}
+.files .obs{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.files button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;font:500 11.5px var(--font-mono);padding:2px 8px;white-space:nowrap}
+.fmode{font:600 10.5px var(--font-mono);letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:4px}
+.fmode-n{background:var(--accent-soft);color:var(--accent)}.fmode-e{background:var(--java-soft);color:var(--java)}.fmode-t{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.howto{margin-top:10px;font-size:14px}
+.howto summary{cursor:pointer;color:var(--accent);font-weight:600}
+.nav .guide{display:flex;gap:8px;align-items:center;margin:4px 0 8px;padding:9px 10px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;color:var(--ink);border:1px dashed var(--line)}
+.nav .guide:hover,.nav .guide.cur{background:var(--accent-soft);border-color:var(--accent)}
+/* Exercise */
+.ex{border:1px solid var(--line);border-radius:12px;background:var(--surface);margin:28px 0;overflow:hidden}
+.ex-head{display:flex;gap:10px;align-items:center;padding:14px 20px;background:var(--java-soft);color:var(--ink)}
+.ex-head .tag{font:600 11px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--java)}
+.ex-head h3{margin:0;font:700 18px/1.3 var(--font-display)}
+.ex-body{padding:16px 20px 20px}
+.ex details{border-top:1px solid var(--line);padding:10px 0}
+.ex details summary{cursor:pointer;font-weight:600;color:var(--accent)}
+/* Quiz */
+.quiz{margin:28px 0}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:12px 0}
+.q p.qt{font-weight:600;margin:0 0 10px}
+.opt{display:block;width:100%;text-align:left;background:var(--bg);border:1px solid var(--line);color:var(--ink);padding:9px 12px;border-radius:8px;margin:6px 0;font-size:15px}
+.opt:hover:not([disabled]){border-color:var(--accent)}
+.opt.right{background:var(--good-soft);border-color:var(--good)}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.opt[disabled]{cursor:default}
+.qexp{font-size:14.5px;color:var(--muted);margin:8px 0 0}
+.score{font:600 15px var(--font-mono)}
+/* Checklist */
+.check{list-style:none;padding:0;margin:8px 0}
+.check li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line)}
+.check input{margin-top:5px;width:17px;height:17px;accent-color:var(--good);flex:0 0 auto}
+.check label{cursor:pointer}
+.check li.on label{color:var(--muted);text-decoration:line-through}
+/* Phase grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:18px 0}
+.pcard{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;text-decoration:none;color:var(--ink)}
+.pcard:hover{border-color:var(--accent)}
+.pcard .n{font:600 12px var(--font-mono);color:var(--java)}
+.pcard h3{font:700 18px/1.25 var(--font-display);margin:0}
+.pcard p{margin:0;font-size:14px;color:var(--muted)}
+.pcard .bar{margin-top:auto}
+.lessons{list-style:none;padding:0;margin:8px 0}
+.lessons li a{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:10px;margin:8px 0;text-decoration:none;color:var(--ink)}
+.lessons li a:hover{border-color:var(--accent)}
+.lessons .ln{font:600 13px var(--font-mono);color:var(--muted)}
+.lessons .lt{font-weight:600}
+.lessons .ld{display:block;font-weight:400;font-size:13.5px;color:var(--muted)}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--line);flex-wrap:wrap}
+.finish{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:32px 0 0;padding:18px 20px;border-radius:12px;background:var(--accent-soft)}
+/* Mentor drawer */
+.mentor-fab{position:fixed;right:20px;bottom:20px;z-index:20;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(440px,100%);background:var(--surface);border-left:1px solid var(--line);z-index:30;display:flex;flex-direction:column;transform:translateX(105%);transition:transform .25s}
+.drawer.open{transform:none;box-shadow:-10px 0 30px rgba(0,0,0,.15)}
+.drawer header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.drawer header h3{margin:0;font:700 18px var(--font-display)}
+.drawer header p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:6px;font-size:14px;font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--ink)}
+.chat{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.msg{padding:10px 13px;border-radius:10px;font-size:14.5px;line-height:1.55;max-width:100%;overflow-wrap:anywhere}
+.msg.me{background:var(--accent);color:var(--accent-ink);align-self:flex-end;max-width:88%}
+.msg.bot{background:var(--bg);border:1px solid var(--line)}
+.msg.bot pre{background:var(--code-bg);color:var(--code-ink);padding:10px;border-radius:8px;overflow-x:auto;font:12.5px/1.5 var(--font-mono)}
+.msg.bot code{font:500 .9em var(--font-mono)}
+.msg.bot p{margin:0 0 8px} .msg.bot p:last-child{margin:0}
+.msg.bot ul,.msg.bot ol{margin:4px 0 8px;padding-left:20px}
+.composer{border-top:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px}
+.composer textarea{width:100%;resize:vertical;min-height:70px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:10px;font:14px/1.5 var(--font-body)}
+.composer textarea.mono{font:13px/1.5 var(--font-mono);min-height:180px}
+.composer .row{display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.suggest{display:flex;flex-wrap:wrap;gap:6px}
+.suggest button{font-size:12.5px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:4px 10px}
+.mentor-off{padding:20px;color:var(--muted);font-size:14px}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:25;display:none}
+.scrim.on{display:block}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 auto 0 0;width:min(320px,90%);z-index:28;transform:translateX(-105%);transition:transform .25s}
+  .side.open{transform:none}
+  .btn.menu-btn{display:inline-flex}
+  .content{padding:24px 16px 96px}
+  .topbar{padding:10px 16px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side" aria-label="Trilha do curso">
+    <div class="brand">
+      <a href="#inicio"><h1>Arquitetura Java</h1></a>
+      <p>Do Java moderno aos sistemas distribuídos</p>
+      <div class="progress-total">
+        <div class="bar" aria-hidden="true"><span id="totalBar"></span></div>
+        <small><span id="totalTxt">0 de 0 aulas</span><span id="totalPct">0%</span></small>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot"><span class="save-state"><span class="dot" id="saveDot"></span><span id="saveTxt">Progresso salvo neste navegador</span></span></div>
+  </aside>
+  <main class="main" id="main">
+    <div class="topbar">
+      <button class="btn ghost menu-btn" id="menuBtn" aria-label="Abrir trilha">☰ Trilha</button>
+      <div class="crumb" id="crumb"></div>
+      <div style="display:flex;gap:8px;align-items:center"><button class="btn ghost" id="themeBtn" aria-label="Alternar tema" title="Tema: automático, claro ou escuro">Tema: automático</button><button class="btn" id="mentorTop" hidden>Mentor</button></div>
+    </div>
+    <div class="content" id="view"></div>
+  </main>
+</div>
+<button class="btn primary mentor-fab" id="mentorFab" hidden>Falar com o mentor</button>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Mentor do curso">
+  <header>
+    <div><h3>Mentor</h3><p id="mentorCtx">Contexto: início do curso</p></div>
+    <button class="btn ghost" id="closeDrawer" aria-label="Fechar mentor">Fechar</button>
+  </header>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="chat" id="tabChat">Tirar dúvidas</button>
+    <button role="tab" aria-selected="false" data-tab="review" id="tabReview">Revisar meu código</button>
+  </div>
+  <div class="chat" id="chat"></div>
+  <div class="composer" id="composerChat">
+    <div class="suggest" id="suggest"></div>
+    <label for="askInput" class="sr" hidden>Sua pergunta</label>
+    <textarea id="askInput" placeholder="Pergunte sobre a aula, peça outro exemplo ou um exercício extra..."></textarea>
+    <div class="row"><button class="btn ghost" id="clearChat">Limpar conversa</button><button class="btn primary" id="askBtn">Enviar</button></div>
+  </div>
+  <div class="composer" id="composerReview" hidden>
+    <label for="codeInput" style="font-size:13px;color:var(--muted)">Cole o seu código (classe, teste ou trecho). O mentor revisa com base na aula atual.</label>
+    <textarea id="codeInput" class="mono" placeholder="public record Dinheiro(BigDecimal valor) { ... }"></textarea>
+    <div class="row"><span style="font-size:12.5px;color:var(--muted)">Revisão: correção, design, testes e próximos passos</span><button class="btn primary" id="reviewBtn">Pedir revisão</button></div>
+  </div>
+</aside>
+
+<script>
+const C = { fases: [] };
+</script>
+<script>
+/*CONTENT*/
+</script>
+<script>
+(function(){
+"use strict";
+const $ = (s, el=document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- índice ---------- */
+const AULAS = [];
+C.fases.forEach((f, fi) => f.aulas.forEach((a, ai) => { a.fase = f; a.fi = fi; a.ai = ai; a.key = `aula-${f.n}-${ai+1}`; AULAS.push(a); }));
+const byKey = Object.fromEntries(AULAS.map(a => [a.key, a]));
+
+/* ---------- progresso ---------- */
+let P = { aulas:{}, check:{}, quiz:{}, ultima:null };
+const LS = 'curso-arq-java-v1';
+try { const raw = localStorage.getItem(LS); if (raw) P = Object.assign(P, JSON.parse(raw)); } catch(e) {}
+let dbRef = null, saving = Promise.resolve(), saveTimer = null;
+function save(){
+  try { localStorage.setItem(LS, JSON.stringify(P)); } catch(e) {}
+  if (!dbRef) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const body = JSON.parse(JSON.stringify(P));
+    saving = saving.then(() => dbRef.set(body)).then(() => setSave(true, 'Progresso salvo na sua conta')).catch(() => setSave(false, 'Não foi possível salvar na conta; salvo neste navegador'));
+  }, 600);
+}
+function setSave(on, txt){ $('#saveDot').classList.toggle('on', on); $('#saveTxt').textContent = txt; }
+(async () => {
+  try {
+    if (!window.claude || !claude.use) return;
+    const [db, user] = await Promise.all([claude.use('db'), claude.use('user')]);
+    if (!db || !user) return;
+    const uid = await user.id();
+    if (!uid) return;
+    const ref = db.doc('data/users/' + uid + '/progresso');
+    const snap = await ref.get();
+    dbRef = ref;
+    if (snap.exists) {
+      const d = snap.data() || {};
+      P = { aulas: Object.assign({}, P.aulas, d.aulas), check: Object.assign({}, P.check, d.check), quiz: Object.assign({}, P.quiz, d.quiz), ultima: d.ultima || P.ultima };
+      try { localStorage.setItem(LS, JSON.stringify(P)); } catch(e) {}
+      render();
+    } else { save(); }
+    setSave(true, 'Progresso salvo na sua conta');
+  } catch(e) { /* fica no navegador */ }
+})();
+
+/* ---------- realce de sintaxe (Java, YAML, SQL, shell, XML, JSON) ---------- */
+const KW = {
+  java: /\b(abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|final|finally|float|for|if|implements|import|instanceof|int|interface|long|native|new|package|private|protected|public|record|return|sealed|permits|non-sealed|short|static|super|switch|synchronized|this|throw|throws|transient|try|var|void|volatile|while|when|yield|null|true|false)\b/,
+  sql: /\b(SELECT|FROM|WHERE|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|INDEX|ON|PRIMARY|KEY|REFERENCES|NOT|NULL|AND|OR|JOIN|LEFT|GROUP|BY|ORDER|LIMIT|EXPLAIN|ANALYZE|UNIQUE|DEFAULT|ALTER|ADD|CONSTRAINT|FOREIGN|AS|BIGSERIAL|BIGINT|VARCHAR|NUMERIC|TIMESTAMP|INTEGER|BOOLEAN|TEXT|UUID)\b/i,
+  shell: /\b(docker|compose|mvn|git|curl|java|kubectl|up|down|run|build|exec|logs|ps)\b/
+};
+function hl(src, lang){
+  const out = []; let i = 0; const s = src;
+  const kw = KW[lang] || (lang==='kotlin'?KW.java:null);
+  const push = (cls, t) => out.push(cls ? `<span class="tk-${cls}">${esc(t)}</span>` : esc(t));
+  const rx = lang === 'yaml' ? /(#[^\n]*)|("(?:[^"\\]|\\.)*"|'[^']*')|(^[ \t-]*[\w.\-]+(?=:))/my
+    : lang === 'shell' ? /(#[^\n]*)|("(?:[^"\\]|\\.)*"|'[^']*')|(--?[\w-]+)|\b(\w+)\b/y
+    : lang === 'xml' ? /(<!--[\s\S]*?-->)|("[^"]*")|(<\/?[\w:.-]+)|(\/?>)/y
+    : lang === 'json' ? /("(?:[^"\\]|\\.)*"(?=\s*:))|("(?:[^"\\]|\\.)*")|\b(true|false|null|-?\d+(?:\.\d+)?)\b/y
+    : /(\/\/[^\n]*|\/\*[\s\S]*?\*\/|--[^\n]*(?=\n|$))|("""[\s\S]*?"""|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|(@[A-Za-z]\w*)|\b(\d[\d_]*(?:\.\d+)?[LlDdFf]?)\b|\b([A-Za-z_]\w*)\b/y;
+  while (i < s.length) {
+    rx.lastIndex = i; const m = rx.exec(s);
+    if (!m || m.index !== i) { push(null, s[i]); i++; continue; }
+    const t = m[0];
+    if (lang === 'yaml') { if (m[1]) push('c', t); else if (m[2]) push('s', t); else push('t', t); }
+    else if (lang === 'shell') { if (m[1]) push('c', t); else if (m[2]) push('s', t); else if (m[3]) push('a', t); else push(kw && kw.test(t) ? 'k' : null, t); }
+    else if (lang === 'xml') { if (m[1]) push('c', t); else if (m[2]) push('s', t); else push('t', t); }
+    else if (lang === 'json') { if (m[1]) push('t', t); else if (m[2]) push('s', t); else push('n', t); }
+    else {
+      if (m[1]) { if (lang !== 'sql' && t.startsWith('--')) { push(null, t[0]); i++; continue; } push('c', t); }
+      else if (m[2]) push('s', t); else if (m[3]) push(lang==='sql'?null:'a', t); else if (m[4]) push('n', t);
+      else { const isK = kw && new RegExp('^(?:' + kw.source.replace(/^\\b\(|\)\\b$/g,'') + ')$', kw.flags).test(t); push(isK ? 'k' : (/^[A-Z][A-Za-z0-9]*$/.test(t) && lang!=='sql' ? 't' : null), t); }
+    }
+    i += t.length;
+  }
+  return out.join('');
+}
+const MODOS = { n:'Novo arquivo', e:'Editar arquivo', t:'Terminal', r:'Exemplo' };
+function expand(p){ if (!p) return p; for (const k of Object.keys(C.prefixos||{})) if (p.startsWith(k)) return C.prefixos[k] + p.slice(k.length); return p; }
+function pathHtml(p){ return String(p).split('/').map(seg => `<span style="white-space:nowrap">${esc(seg)}</span>`).join('/<wbr>'); }
+function regCopy(txt){ const id = 'c' + Math.random().toString(36).slice(2,9); CODES[id] = txt; return id; }
+function codeBlock(c){
+  const id = regCopy(c.src);
+  const arq = c.arquivo;
+  let head, sub = '';
+  if (arq) {
+    const [m, p, nota] = arq; const path = expand(p);
+    const isPath = m === 'n' || m === 'e';
+    head = `<div class="fp"><span class="mode mode-${m}">${MODOS[m]}</span>${isPath ? `<code>${pathHtml(path)}</code>` : `<span>${esc(path || c.titulo)}</span>`}</div>
+      <div class="btns">${isPath ? `<button data-copy="${regCopy(path)}" data-label="Copiar caminho">Copiar caminho</button>` : ''}<button data-copy="${id}" data-label="Copiar código">Copiar código</button></div>`;
+    sub = `<div class="code-sub">${esc(c.titulo)}${nota ? ' · ' + esc(nota) : ''}</div>`;
+  } else {
+    head = `<span>${esc(c.titulo || c.lang || 'código')}</span><button data-copy="${id}" data-label="Copiar">Copiar</button>`;
+  }
+  return `<div class="code"><div class="code-head">${head}</div>${sub}<pre><code>${hl(c.src.replace(/^\n/,''), c.lang || 'java')}</code></pre></div>`;
+}
+function filesCard(a){
+  const P = C.paths && C.paths[a.key]; if (!P) return '';
+  const rows = [], seen = new Set();
+  const add = (m, p, obs) => { if (m === 'r') return; const path = expand(p); const k = m + '|' + path; if (seen.has(k)) return; seen.add(k); rows.push([m, path, obs]); };
+  (a.codigo||[]).forEach((c, i) => { const e = P.c && P.c[i]; if (e) add(e[0], e[1], e[2] || c.titulo); });
+  (P.x||[]).forEach(e => add(e[0], e[1], e[2]));
+  const sol = a.exercicio ? (Array.isArray(a.exercicio.solucao) ? a.exercicio.solucao : [{titulo:'Gabarito'}]) : [];
+  sol.forEach((c, i) => { const e = P.s && P.s[i]; if (e) add(e[0], e[1], (e[2] ? e[2] + ' ' : '') + '(conteúdo no gabarito do exercício)'); });
+  if (!rows.length) return '';
+  return `<div class="card"><b>Arquivos desta aula</b><p style="margin:2px 0 0;font-size:14px;color:var(--muted)">Caminhos a partir da raiz do repositório <code>ticketflow</code>. A lista segue a ordem da aula: primeiro os blocos de código, depois o exercício.</p>
+  <div class="table-wrap"><table class="files"><tbody>${rows.map(([m, path, obs]) => `<tr><td><span class="fmode fmode-${m}">${MODOS[m]}</span></td><td><span class="path">${/^(git|docker|\.\/mvnw)/.test(path) || m!=='t' ? pathHtml(path) : esc(path)}</span>${obs ? `<span class="obs">${esc(obs)}</span>` : ''}</td><td>${m !== 't' || /^(git|docker|\.\/mvnw)/.test(path) ? `<button data-copy="${regCopy(path)}" data-label="Copiar">Copiar</button>` : ''}</td></tr>`).join('')}</tbody></table></div>
+  <details class="howto"><summary>Como criar um arquivo no VS Code</summary><ol style="margin:8px 0 0;padding-left:20px"><li>Clique em <b>Copiar</b> na linha do arquivo.</li><li>No Explorer (Ctrl+Shift+E), botão direito na raiz <code>TICKETFLOW</code> → <b>New File…</b></li><li>Cole o caminho e tecle Enter: as pastas que faltam são criadas.</li><li>Cole o código do bloco correspondente e salve (Ctrl+S). Em <code>.java</code>, confira a linha <code>package</code>.</li></ol><p style="margin:6px 0 0">Mais detalhes no <a href="#vscode">Guia do VS Code</a>.</p></details></div>`;
+}
+const CODES = {};
+
+/* ---------- render ---------- */
+function nav(curKey){
+  const total = AULAS.length, feitas = AULAS.filter(a => P.aulas[a.key]).length;
+  $('#totalBar').style.width = (100*feitas/total) + '%';
+  $('#totalTxt').textContent = `${feitas} de ${total} aulas`;
+  $('#totalPct').textContent = Math.round(100*feitas/total) + '%';
+  const curFase = curKey && curKey.startsWith('aula-') ? byKey[curKey]?.fase.n : (curKey||'').startsWith('fase-') ? curKey.slice(5) : null;
+  $('#nav').innerHTML = `<a class="guide ${curKey==='vscode'?'cur':''}" href="#vscode"><span class="num" style="width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font:600 11px var(--font-mono);border:1px solid var(--line)">VS</span>Guia do VS Code</a>` + C.fases.map(f => {
+    const n = f.aulas.length, d = f.aulas.filter(a => P.aulas[a.key]).length;
+    return `<details ${String(f.n)===String(curFase)?'open':''} class="${d===n?'done':''}"><summary><span class="num">${d===n?'✓':esc(f.n)}</span><span>${esc(f.curto)}</span><span class="pct">${d}/${n}</span></summary>
+      <ul><li><a class="phase-link ${curKey==='fase-'+f.n?'cur':''}" href="#fase-${f.n}"><span class="tick">◆</span>Visão geral e checklist</a></li>
+      ${f.aulas.map(a => `<li><a href="#${a.key}" class="${P.aulas[a.key]?'ok':''} ${curKey===a.key?'cur':''}"><span class="tick">${P.aulas[a.key]?'●':'○'}</span>${esc(a.titulo)}</a></li>`).join('')}</ul></details>`;
+  }).join('');
+}
+function faseProgress(f){ const n=f.aulas.length, d=f.aulas.filter(a=>P.aulas[a.key]).length; return {n,d,pct:Math.round(100*d/n)}; }
+
+function viewHome(){
+  const prox = AULAS.find(a => !P.aulas[a.key]);
+  const ult = P.ultima && byKey[P.ultima];
+  return `<div class="eyebrow">Curso prático · ${C.fases.length} módulos · ${AULAS.length} aulas</div>
+  <h2 class="title">Arquitetura e desenvolvimento Java, construindo um sistema de verdade</h2>
+  <p class="lead">Você vai construir o <b>TicketFlow</b>, uma plataforma de venda de ingressos, do domínio em Java puro até uma arquitetura distribuída com mensageria, observabilidade e pipeline de entrega. Cada aula tem teoria curta, código comentado, um exercício no projeto, gabarito e quiz.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 28px">
+    ${ult ? `<a class="btn primary" href="#${ult.key}">Continuar: ${esc(ult.titulo)}</a>` : prox ? `<a class="btn primary" href="#${prox.key}">Começar pela primeira aula</a>` : ''}
+    ${prox && ult && prox !== ult ? `<a class="btn" href="#${prox.key}">Próxima pendente: ${esc(prox.titulo)}</a>` : ''}
+    <a class="btn" href="#vscode">Guia do VS Code</a>
+  </div>
+  <div class="grid">${C.fases.map(f => { const p = faseProgress(f); return `<a class="pcard" href="#fase-${f.n}"><span class="n">${f.n==='F'?'PROJETO FINAL':'FASE '+f.n} · ${esc(f.semanas)}</span><h3>${esc(f.titulo)}</h3><p>${esc(f.resumo)}</p><div class="bar"><span style="width:${p.pct}%"></span></div><p style="font:500 12px var(--font-mono)">${p.d}/${p.n} aulas</p></a>`; }).join('')}</div>
+  <div class="prose">${C.intro}</div>`;
+}
+function viewVscode(){
+  const html = C.vscode.replace(/<!--code:(\d+)-->/g, (_, i) => codeBlock(C.vscodeCodigo[+i]));
+  return `<div class="eyebrow">Referência · consulte sempre</div><h2 class="title">Guia do VS Code para o curso</h2>
+  <p class="lead">Como configurar o VS Code, onde criar cada arquivo, como nomear e como rodar, testar e depurar o TicketFlow.</p><div class="prose">${html}</div>
+  <div class="pager"><a class="btn" href="#inicio">← Início</a><a class="btn primary" href="#aula-1-1">Ir para a primeira aula →</a></div>`;
+}
+function viewFase(f){
+  const p = faseProgress(f);
+  return `<div class="eyebrow">${f.n==='F'?'Projeto final':'Fase '+f.n} · ${esc(f.semanas)}</div>
+  <h2 class="title">${esc(f.titulo)}</h2>
+  <p class="lead">${f.objetivo}</p>
+  <div class="meta"><span class="chip">${p.d}/${p.n} aulas concluídas</span><span class="chip java">Entrega: ${esc(f.entrega)}</span></div>
+  <h3 style="font:700 20px var(--font-display)">Aulas</h3>
+  <ul class="lessons">${f.aulas.map((a,i) => `<li><a href="#${a.key}"><span class="ln">${f.n}.${i+1}</span><span><span class="lt">${esc(a.titulo)}</span><span class="ld">${esc(a.resumo)}</span></span><span class="chip ${P.aulas[a.key]?'ok':''}">${P.aulas[a.key]?'concluída':esc(a.duracao)}</span></a></li>`).join('')}</ul>
+  <div class="card"><h3 style="font:700 20px var(--font-display)">Checklist do TicketFlow</h3><p style="color:var(--muted);margin:0 0 6px;font-size:14.5px">Marque cada item quando estiver commitado e com testes passando.</p>
+  <ul class="check">${f.checklist.map((c,i) => { const id = `ck-${f.n}-${i}`; return `<li class="${P.check[id]?'on':''}"><input type="checkbox" id="${id}" data-check="${id}" ${P.check[id]?'checked':''}><label for="${id}">${c}</label></li>`; }).join('')}</ul></div>
+  ${f.extra ? `<div class="prose">${f.extra}</div>` : ''}
+  <div class="prose"><h3>Leituras da fase</h3><ul>${f.leituras.map(l => `<li>${l}</li>`).join('')}</ul></div>`;
+}
+function viewAula(a){
+  const PP = (C.paths && C.paths[a.key]) || {};
+  (a.codigo||[]).forEach((c, i) => { if (PP.c && PP.c[i]) c.arquivo = PP.c[i]; });
+  if (a.exercicio && Array.isArray(a.exercicio.solucao)) a.exercicio.solucao.forEach((c, i) => { if (PP.s && PP.s[i]) c.arquivo = PP.s[i]; });
+  else if (a.exercicio && a.exercicio.solucao && PP.s && PP.s[0]) { a.exercicio.solucao = [{ titulo: 'Gabarito', src: a.exercicio.solucao, arquivo: PP.s[0] }]; }
+  const f = a.fase, prev = AULAS[AULAS.indexOf(a)-1], next = AULAS[AULAS.indexOf(a)+1];
+  const qs = a.quiz || [], qsaved = P.quiz[a.key];
+  return `<div class="eyebrow">${f.n==='F'?'Projeto final':'Fase '+f.n} · Aula ${a.ai+1} de ${f.aulas.length}</div>
+  <h2 class="title">${esc(a.titulo)}</h2>
+  <p class="lead">${esc(a.resumo)}</p>
+  <div class="meta"><span class="chip">${esc(a.duracao)}</span>${P.aulas[a.key]?'<span class="chip ok">concluída</span>':''}</div>
+  <div class="card"><b>Ao final desta aula você vai conseguir</b><ul class="objs">${a.objetivos.map(o=>`<li>${o}</li>`).join('')}</ul></div>
+  ${filesCard(a)}
+  <div class="prose">${a.teoria}</div>
+  ${(a.codigo||[]).length ? `<div class="prose"><h3>Código comentado</h3></div>${a.codigo.map(c => (c.antes?`<div class="prose"><p>${c.antes}</p></div>`:'') + codeBlock(c)).join('')}` : ''}
+  ${a.exercicio ? `<div class="ex"><div class="ex-head"><div><div class="tag">Mão na massa · TicketFlow</div><h3>${esc(a.exercicio.titulo)}</h3></div></div><div class="ex-body"><div class="prose">${a.exercicio.enunciado}</div>
+    ${(a.exercicio.dicas||[]).map((d,i)=>`<details><summary>Dica ${i+1}</summary><div class="prose" style="margin-top:8px">${d}</div></details>`).join('')}
+    <details><summary>Ver gabarito comentado</summary><div style="margin-top:8px">${a.exercicio.solucaoNota?`<div class="prose"><p>${a.exercicio.solucaoNota}</p></div>`:''}${(Array.isArray(a.exercicio.solucao)?a.exercicio.solucao:[{titulo:'Gabarito',src:a.exercicio.solucao}]).map(codeBlock).join('')}</div></details>
+    <div style="margin-top:12px"><button class="btn" data-review="1">Enviar minha solução para o mentor revisar</button></div></div></div>` : ''}
+  ${qs.length ? `<div class="quiz"><div class="prose"><h3>Quiz da aula</h3><p>Responda antes de olhar o gabarito do exercício. ${qsaved!=null?`<span class="score">Seu último resultado: ${qsaved}/${qs.length}</span>`:''}</p></div>
+    ${qs.map((q,qi)=>`<div class="q" data-q="${qi}"><p class="qt">${qi+1}. ${q.p}</p>${q.o.map((o,oi)=>`<button class="opt" data-qi="${qi}" data-oi="${oi}">${o}</button>`).join('')}<p class="qexp" hidden></p></div>`).join('')}
+    <p class="score" id="quizScore"></p></div>` : ''}
+  ${a.desafio ? `<div class="callout"><b>Desafio extra</b>${a.desafio}</div>` : ''}
+  <div class="finish">${P.aulas[a.key] ? `<span class="chip ok">Aula concluída</span><button class="btn ghost" data-undone="${a.key}">Desmarcar</button>` : `<button class="btn good" data-done="${a.key}">Marcar aula como concluída</button><span style="font-size:14px;color:var(--muted)">Conclua quando o exercício estiver no seu repositório.</span>`}</div>
+  <div class="pager">${prev?`<a class="btn" href="#${prev.key}">← ${esc(prev.titulo)}</a>`:'<span></span>'}${next?`<a class="btn primary" href="#${next.key}">${esc(next.titulo)} →</a>`:`<a class="btn primary" href="#inicio">Voltar ao início</a>`}</div>`;
+}
+
+let cur = 'inicio';
+function render(){
+  const h = (location.hash || '#inicio').slice(1);
+  cur = h;
+  let html, crumb, ctx;
+  if (byKey[h]) { const a = byKey[h]; html = viewAula(a); crumb = `<a href="#inicio">Início</a> / <a href="#fase-${a.fase.n}">${esc(a.fase.curto)}</a> / ${esc(a.titulo)}`; ctx = a; if (P.ultima !== h) { P.ultima = h; save(); } }
+  else if (h.startsWith('fase-') && C.fases.find(f => 'fase-'+f.n === h)) { const f = C.fases.find(f => 'fase-'+f.n === h); html = viewFase(f); crumb = `<a href="#inicio">Início</a> / ${esc(f.curto)}`; ctx = f; }
+  else if (h === 'vscode') { html = viewVscode(); crumb = '<a href="#inicio">Início</a> / Guia do VS Code'; ctx = null; }
+  else { html = viewHome(); crumb = 'Início'; ctx = null; cur = 'inicio'; }
+  $('#view').innerHTML = html; $('#crumb').innerHTML = crumb;
+  nav(cur); setMentorCtx(ctx);
+  $('#main').scrollTop = 0; $('#side').classList.remove('open'); $('#scrim').classList.toggle('on', $('#drawer').classList.contains('open'));
+}
+window.addEventListener('hashchange', render);
+
+/* ---------- interações ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button,input'); if (!t) return;
+  if (t.dataset.copy) { const src = CODES[t.dataset.copy], lbl = t.dataset.label || 'Copiar'; try { navigator.clipboard.writeText(src).then(()=>{t.textContent='Copiado';setTimeout(()=>t.textContent=lbl,1500)}).catch(()=>{t.textContent='Selecione e copie'}); } catch(_) { t.textContent='Selecione e copie'; } }
+  if (t.dataset.done) { P.aulas[t.dataset.done] = true; save(); render(); }
+  if (t.dataset.undone) { delete P.aulas[t.dataset.undone]; save(); render(); }
+  if (t.dataset.check) { if (t.checked) P.check[t.dataset.check] = true; else delete P.check[t.dataset.check]; t.closest('li').classList.toggle('on', t.checked); save(); }
+  if (t.dataset.qi != null && t.classList.contains('opt')) {
+    const a = byKey[cur]; const qi = +t.dataset.qi, oi = +t.dataset.oi, q = a.quiz[qi];
+    const box = t.closest('.q'); box.querySelectorAll('.opt').forEach((b, i) => { b.disabled = true; if (i === q.c) b.classList.add('right'); });
+    if (oi !== q.c) t.classList.add('wrong');
+    box.dataset.ok = oi === q.c ? '1' : '0';
+    const ex = box.querySelector('.qexp'); ex.hidden = false; ex.innerHTML = (oi===q.c?'<b style="color:var(--good)">Correto.</b> ':'<b style="color:var(--bad)">Não é essa.</b> ') + q.e;
+    const all = [...document.querySelectorAll('.q')];
+    if (all.every(b => b.dataset.ok != null)) { const acertos = all.filter(b => b.dataset.ok === '1').length; P.quiz[a.key] = acertos; save(); $('#quizScore').textContent = `Resultado: ${acertos}/${all.length}` + (acertos === all.length ? ' — excelente.' : ' — releia a teoria dos itens que errou e pergunte ao mentor.'); }
+  }
+  if (t.dataset.review) { openDrawer('review'); }
+});
+$('#menuBtn').onclick = () => { $('#side').classList.add('open'); $('#scrim').classList.add('on'); };
+$('#scrim').onclick = () => { $('#side').classList.remove('open'); closeDrawer(); $('#scrim').classList.remove('on'); };
+
+/* ---------- mentor (pergunta ao Claude) ---------- */
+let sample = null, ctxObj = null, history = [], busy = false, ctrl = null;
+function setMentorCtx(o){
+  ctxObj = o;
+  $('#mentorCtx').textContent = o ? (o.aulas ? `Contexto: ${o.curto}` : `Contexto: aula ${o.fase.n}.${o.ai+1} · ${o.titulo}`) : 'Contexto: visão geral do curso';
+  const sug = o && !o.aulas ? ['Explique de outro jeito com uma analogia', 'Me dê um exercício extra desta aula', 'Quais erros comuns nesse tema?', 'Como isso aparece em entrevista técnica?'] : ['Como devo organizar minha semana de estudo?', 'Não entendi a diferença entre as fases 3 e 4', 'Por onde começo se já sei Spring?'];
+  $('#suggest').innerHTML = sug.map(s => `<button data-sug="${esc(s)}">${esc(s)}</button>`).join('');
+}
+$('#suggest').addEventListener('click', e => { const b = e.target.closest('[data-sug]'); if (b) { $('#askInput').value = b.dataset.sug; ask(); } });
+function contextText(){
+  if (!ctxObj) return 'O aluno está na página inicial do curso. Fases: ' + C.fases.map(f => `${f.n} ${f.titulo} (${f.semanas})`).join('; ') + '.';
+  if (ctxObj.aulas) return `O aluno está na visão geral da ${ctxObj.n==='F'?'etapa de projeto final':'fase '+ctxObj.n}: ${ctxObj.titulo}. Objetivo: ${strip(ctxObj.objetivo)}. Checklist: ${ctxObj.checklist.map(strip).join(' | ')}.`;
+  const a = ctxObj;
+  return `Aula ${a.fase.n}.${a.ai+1} "${a.titulo}" da fase "${a.fase.titulo}". Objetivos: ${a.objetivos.map(strip).join('; ')}. Resumo da teoria: ${strip(a.teoria).slice(0, 2500)}. Exercício: ${a.exercicio ? strip(a.exercicio.enunciado).slice(0, 900) : 'nenhum'}. Arquivos da aula (caminhos oficiais): ${aulaPaths(a)}.`;
+}
+function aulaPaths(a){ const P = C.paths && C.paths[a.key]; if (!P) return 'não informado'; return [...(P.c||[]), ...(P.x||[]), ...(P.s||[])].filter(e => e[0]==='n'||e[0]==='e').map(e => (e[0]==='n'?'novo ':'editar ') + expand(e[1])).join('; '); }
+function strip(h){ const d = document.createElement('div'); d.innerHTML = h; return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
+const SYS = `Você é o instrutor e mentor de um curso prático de Arquitetura e Desenvolvimento Java, em português do Brasil. O aluno é um coordenador de desenvolvimento de software e professor universitário que quer dominar arquitetura Java. O projeto do curso é o TicketFlow, uma plataforma de venda de ingressos (Java 21, Spring Boot 3/4, PostgreSQL, JUnit 5, Testcontainers, Docker, Kafka/RabbitMQ). Seja direto, didático e honesto: aponte erros com clareza, explique o porquê, mostre código Java moderno curto quando ajudar e termine com um próximo passo prático. Não entregue a solução completa de um exercício se o aluno não pediu: prefira dicas e perguntas que o levem a pensar. O aluno usa o VS Code. Sempre que sugerir código, diga o caminho completo do arquivo a partir da raiz do repositório (ex.: ticketflow-domain/src/main/java/dev/ticketflow/domain/evento/Setor.java), se é arquivo novo ou edição de um existente, e qual linha package usar; comandos são rodados no terminal integrado do VS Code (Ctrl+'), na raiz, com ./mvnw (no Windows, .\\mvnw.cmd). Use atalhos e painéis do VS Code nas orientações (Explorer, Testing, Source Control, Ctrl+., F2, Ctrl+Shift+R). Use Markdown simples (parágrafos, listas, blocos de código com crases triplas).`;
+function md(t){
+  const blocks = String(t).split(/```(\w*)\n?([\s\S]*?)(?:```|$)/);
+  let html = '';
+  for (let i = 0; i < blocks.length; i += 3) {
+    const txt = blocks[i] || '';
+    html += txt.split(/\n{2,}/).map(p => {
+      p = p.trim(); if (!p) return '';
+      const lines = p.split('\n');
+      if (lines.every(l => /^\s*[-*] /.test(l))) return '<ul>' + lines.map(l => '<li>' + inline(l.replace(/^\s*[-*] /,'')) + '</li>').join('') + '</ul>';
+      if (lines.every(l => /^\s*\d+[.)] /.test(l))) return '<ol>' + lines.map(l => '<li>' + inline(l.replace(/^\s*\d+[.)] /,'')) + '</li>').join('') + '</ol>';
+      if (/^#{1,4} /.test(p)) return '<p><b>' + inline(p.replace(/^#+ /,'')) + '</b></p>';
+      return '<p>' + lines.map(inline).join('<br>') + '</p>';
+    }).join('');
+    if (blocks[i+2] != null) html += '<pre><code>' + hl(blocks[i+2], blocks[i+1] || 'java') + '</code></pre>';
+  }
+  return html;
+}
+function inline(s){ return esc(s).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>'); }
+function addMsg(who, html){ const d = document.createElement('div'); d.className = 'msg ' + who; d.innerHTML = html; $('#chat').appendChild(d); $('#chat').scrollTop = 1e9; return d; }
+async function runSample(messages, el){
+  if (!sample) { el.innerHTML = '<p>O mentor não está disponível nesta visualização.</p>'; return ''; }
+  busy = true; $('#askBtn').disabled = $('#reviewBtn').disabled = true;
+  ctrl = new AbortController();
+  try {
+    const r = await sample(messages, { cache:false, signal: ctrl.signal, modelTier:'default', onText: ({text}) => { el.innerHTML = md(text); $('#chat').scrollTop = 1e9; } });
+    el.innerHTML = md(r.text); return r.text;
+  } catch (err) {
+    const code = err && err.code;
+    el.innerHTML = code === 'rate_limited' ? '<p>Muitas perguntas seguidas. Espere um minuto e tente de novo.</p>' : code === 'not_granted' ? '<p>O mentor precisa da sua permissão para responder. Tente de novo e aceite o pedido.</p>' : '<p>Não consegui responder agora. Tente de novo em instantes.</p>';
+    return '';
+  } finally { busy = false; $('#askBtn').disabled = $('#reviewBtn').disabled = false; }
+}
+async function ask(){
+  const q = $('#askInput').value.trim(); if (!q || busy) return;
+  $('#askInput').value = '';
+  addMsg('me', esc(q));
+  const el = addMsg('bot', '<p>Pensando...</p>');
+  history.push({role:'user', content:q});
+  const msgs = [{role:'user', content: SYS + '\n\nContexto atual do curso: ' + contextText() + '\n\nResponda à conversa a seguir.'}, {role:'assistant', content:'Entendido. Estou pronto para ajudar como mentor.'}, ...history.slice(-10)];
+  const text = await runSample(msgs, el);
+  if (text) history.push({role:'assistant', content:text}); else history.pop();
+}
+async function review(){
+  const code = $('#codeInput').value.trim(); if (!code || busy) return;
+  showTab('chat');
+  addMsg('me', '<b>Revisão de código</b><pre style="white-space:pre-wrap;margin:6px 0 0;font:12px/1.4 var(--font-mono)">' + esc(code.slice(0, 600)) + (code.length > 600 ? '\n...' : '') + '</pre>');
+  const el = addMsg('bot', '<p>Revisando...</p>');
+  const prompt = SYS + '\n\nContexto atual do curso: ' + contextText() + `\n\nRevise o código abaixo como um mentor sênior faria num code review. Estruture a resposta em: 1) O que está bom; 2) Problemas (do mais grave ao menos grave), cada um com o porquê e um trecho corrigido curto; 3) Aderência ao objetivo da aula e ao exercício; 4) Um teste que está faltando; 5) Nota de 0 a 10 e próximo passo. Seja específico ao código enviado.\n\nCódigo do aluno:\n\`\`\`\n${code.slice(0, 12000)}\n\`\`\``;
+  const text = await runSample(prompt, el);
+  if (text) { history.push({role:'user', content:'(Enviei um código para revisão)\n' + code.slice(0, 3000)}, {role:'assistant', content:text}); }
+}
+$('#askBtn').onclick = ask;
+$('#askInput').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ask(); });
+$('#reviewBtn').onclick = review;
+$('#clearChat').onclick = () => { if (ctrl) ctrl.abort(); history = []; $('#chat').innerHTML = ''; greet(); };
+function showTab(t){ $('#tabChat').setAttribute('aria-selected', t==='chat'); $('#tabReview').setAttribute('aria-selected', t==='review'); $('#composerChat').hidden = t!=='chat'; $('#composerReview').hidden = t!=='review'; }
+$('#tabChat').onclick = () => showTab('chat'); $('#tabReview').onclick = () => showTab('review');
+function openDrawer(tab){ $('#drawer').classList.add('open'); $('#scrim').classList.add('on'); showTab(tab || 'chat'); setTimeout(() => (tab==='review'?$('#codeInput'):$('#askInput')).focus(), 250); }
+function closeDrawer(){ $('#drawer').classList.remove('open'); $('#scrim').classList.remove('on'); }
+$('#closeDrawer').onclick = closeDrawer;
+$('#mentorFab').onclick = () => openDrawer('chat'); $('#mentorTop').onclick = () => openDrawer('chat');
+function greet(){ addMsg('bot', sample ? '<p>Olá! Sou o seu mentor neste curso. Pergunte qualquer coisa sobre a aula aberta, peça um exemplo diferente ou cole seu código na aba <b>Revisar meu código</b>.</p>' : '<p>O mentor fica disponível quando a página é aberta no Claude.</p>'); }
+(async () => {
+  try { if (window.claude && claude.use) sample = await claude.use('sample'); } catch(e) { sample = null; }
+  if (sample) { $('#mentorFab').hidden = false; $('#mentorTop').hidden = false; }
+  greet();
+})();
+
+/* ---------- tema claro / escuro ---------- */
+const TEMA_LS = 'curso-arq-java-tema';
+const hostTheme = document.documentElement.getAttribute('data-theme');
+const ROTULO = { auto:'Tema: automático', light:'Tema: claro', dark:'Tema: escuro' };
+const PROX = { auto:'light', light:'dark', dark:'auto' };
+let tema = 'auto';
+try { tema = localStorage.getItem(TEMA_LS) || 'auto'; } catch(e) {}
+function aplicarTema(){
+  const root = document.documentElement;
+  if (tema === 'auto') { if (hostTheme) root.setAttribute('data-theme', hostTheme); else root.removeAttribute('data-theme'); }
+  else root.setAttribute('data-theme', tema);
+  $('#themeBtn').textContent = ROTULO[tema];
+}
+$('#themeBtn').onclick = () => { tema = PROX[tema]; try { localStorage.setItem(TEMA_LS, tema); } catch(e) {} aplicarTema(); };
+aplicarTema();
+
+render();
+})();
+</script>
+</body>
+</html>
