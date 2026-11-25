@@ -2,6 +2,8 @@
 
 Site estático publicado no GitHub Pages a cada push na branch `main`.
 
+**Acesse:** https://juniorperfoll.github.io/curso-arquitetura-java/
+
 ## Onde editar
 
 | Quero mudar | Arquivo |
