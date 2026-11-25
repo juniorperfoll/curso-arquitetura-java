@@ -137,6 +137,35 @@ h2.title{font:700 clamp(28px,4vw,38px)/1.1 var(--font-display);letter-spacing:-.
 .howto summary{cursor:pointer;color:var(--accent);font-weight:600}
 .nav .guide{display:flex;gap:8px;align-items:center;margin:4px 0 8px;padding:9px 10px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;color:var(--ink);border:1px dashed var(--line)}
 .nav .guide:hover,.nav .guide.cur{background:var(--accent-soft);border-color:var(--accent)}
+
+/* Didática estilo Use a Cabeça */
+.story{position:relative;margin:0 0 24px;padding:18px 20px 18px 22px;border-radius:12px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--java);font-size:16.5px}
+.story .lbl,.box .lbl{display:block;font:600 11px var(--font-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--java);margin-bottom:6px}
+.box{margin:24px 0;padding:16px 20px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}
+.box.lapis{border:2px dashed var(--java)}
+.box.lapis .lbl{color:var(--java)}
+.box.faq .lbl,.box.brain .lbl,.box.bala .lbl,.box.videos .lbl{color:var(--accent)}
+.box.faq dl{margin:6px 0 0}
+.box.faq dt{font-weight:600;margin:12px 0 4px}
+.box.faq dt::before{content:"P: ";color:var(--accent);font-family:var(--font-mono)}
+.box.faq dd{margin:0;color:var(--ink)}
+.box.faq dd::before{content:"R: ";color:var(--java);font-family:var(--font-mono);font-weight:600}
+.box.brain{background:var(--accent-soft);border-color:transparent;font-size:16.5px}
+.box.bala ul{margin:6px 0 0;padding-left:0;list-style:none}
+.box.bala li{padding:6px 0 6px 26px;position:relative;border-bottom:1px dashed var(--line)}
+.box.bala li:last-child{border-bottom:0}
+.box.bala li::before{content:"";position:absolute;left:4px;top:13px;width:10px;height:10px;border-radius:50%;background:var(--java)}
+.box.lapis details{margin-top:10px}
+.box.lapis summary{cursor:pointer;color:var(--accent);font-weight:600}
+.vids{display:grid;gap:10px;margin-top:8px}
+.vid{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink);background:var(--bg)}
+.vid:hover{border-color:var(--accent)}
+.vid .play{width:34px;height:24px;border-radius:6px;background:#d93025;display:grid;place-items:center}
+.vid .play::after{content:"";border-left:9px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:2px}
+.vid .t{font-weight:500;line-height:1.35}
+.vid .lang{font:600 11px var(--font-mono);padding:2px 7px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
+.vid .lang.en{background:var(--java-soft);color:var(--java)}
+.vnote{font-size:13px;color:var(--muted);margin:8px 0 0}
 /* Exercise */
 .ex{border:1px solid var(--line);border-radius:12px;background:var(--surface);margin:28px 0;overflow:hidden}
 .ex-head{display:flex;gap:10px;align-items:center;padding:14px 20px;background:var(--java-soft);color:var(--ink)}
@@ -367,6 +396,13 @@ function codeBlock(c){
   }
   return `<div class="code"><div class="code-head">${head}</div>${sub}<pre><code>${hl(c.src.replace(/^\n/,''), c.lang || 'java')}</code></pre></div>`;
 }
+function videosBox(list, titulo){
+  if (!list || !list.length) return '';
+  const temEn = list.some(v => v[2] === 'EN');
+  return `<div class="box videos"><span class="lbl">${titulo || 'Assista'}</span>
+  <div class="vids">${list.map(([t, url, lang]) => `<a class="vid" href="${esc(url)}" target="_blank" rel="noopener"><span class="play" aria-hidden="true"></span><span class="t">${esc(t)}</span><span class="lang ${lang==='EN'?'en':''}">${lang==='EN'?'EN':'PT'}</span></a>`).join('')}</div>
+  ${temEn ? '<p class="vnote">Vídeos marcados com EN estão em inglês: no YouTube, ative Legendas → Traduzir automaticamente → Português.</p>' : ''}</div>`;
+}
 function filesCard(a){
   const P = C.paths && C.paths[a.key]; if (!P) return '';
   const rows = [], seen = new Set();
@@ -415,7 +451,7 @@ function viewHome(){
 function viewVscode(){
   const html = C.vscode.replace(/<!--code:(\d+)-->/g, (_, i) => codeBlock(C.vscodeCodigo[+i]));
   return `<div class="eyebrow">Referência · consulte sempre</div><h2 class="title">Guia do VS Code para o curso</h2>
-  <p class="lead">Como configurar o VS Code, onde criar cada arquivo, como nomear e como rodar, testar e depurar o TicketFlow.</p><div class="prose">${html}</div>
+  <p class="lead">Como configurar o VS Code, onde criar cada arquivo, como nomear e como rodar, testar e depurar o TicketFlow.</p>${videosBox(C.vscodeVideos, 'Assista: configurando o VS Code para Java')}<div class="prose">${html}</div>
   <div class="pager"><a class="btn" href="#inicio">← Início</a><a class="btn primary" href="#aula-1-1">Ir para a primeira aula →</a></div>`;
 }
 function viewFase(f){
@@ -432,6 +468,7 @@ function viewFase(f){
   <div class="prose"><h3>Leituras da fase</h3><ul>${f.leituras.map(l => `<li>${l}</li>`).join('')}</ul></div>`;
 }
 function viewAula(a){
+  const X = (C.extras && C.extras[a.key]) || {};
   const PP = (C.paths && C.paths[a.key]) || {};
   (a.codigo||[]).forEach((c, i) => { if (PP.c && PP.c[i]) c.arquivo = PP.c[i]; });
   if (a.exercicio && Array.isArray(a.exercicio.solucao)) a.exercicio.solucao.forEach((c, i) => { if (PP.s && PP.s[i]) c.arquivo = PP.s[i]; });
@@ -442,9 +479,13 @@ function viewAula(a){
   <h2 class="title">${esc(a.titulo)}</h2>
   <p class="lead">${esc(a.resumo)}</p>
   <div class="meta"><span class="chip">${esc(a.duracao)}</span>${P.aulas[a.key]?'<span class="chip ok">concluída</span>':''}</div>
+  ${X.g ? `<div class="story"><span class="lbl">Imagine a cena</span>${X.g}</div>` : ''}
   <div class="card"><b>Ao final desta aula você vai conseguir</b><ul class="objs">${a.objetivos.map(o=>`<li>${o}</li>`).join('')}</ul></div>
+  ${videosBox(X.v, 'Assista: vídeos sobre o tema desta aula')}
   ${filesCard(a)}
   <div class="prose">${a.teoria}</div>
+  ${X.l ? `<div class="box lapis"><span class="lbl">Aponte seu lápis</span><div class="prose">${X.l[0]}</div><p style="margin:6px 0 0;font-size:14px;color:var(--muted)">Responda no papel antes de abrir a resposta.</p><details><summary>Ver resposta</summary><div class="prose" style="margin-top:8px">${X.l[1]}</div></details></div>` : ''}
+  ${X.q && X.q.length ? `<div class="box faq"><span class="lbl">Não existem perguntas idiotas</span><dl>${X.q.map(([p, r]) => `<dt>${p}</dt><dd>${r}</dd>`).join('')}</dl></div>` : ''}
   ${(a.codigo||[]).length ? `<div class="prose"><h3>Código comentado</h3></div>${a.codigo.map(c => (c.antes?`<div class="prose"><p>${c.antes}</p></div>`:'') + codeBlock(c)).join('')}` : ''}
   ${a.exercicio ? `<div class="ex"><div class="ex-head"><div><div class="tag">Mão na massa · TicketFlow</div><h3>${esc(a.exercicio.titulo)}</h3></div></div><div class="ex-body"><div class="prose">${a.exercicio.enunciado}</div>
     ${(a.exercicio.dicas||[]).map((d,i)=>`<details><summary>Dica ${i+1}</summary><div class="prose" style="margin-top:8px">${d}</div></details>`).join('')}
@@ -454,6 +495,8 @@ function viewAula(a){
     ${qs.map((q,qi)=>`<div class="q" data-q="${qi}"><p class="qt">${qi+1}. ${q.p}</p>${q.o.map((o,oi)=>`<button class="opt" data-qi="${qi}" data-oi="${oi}">${o}</button>`).join('')}<p class="qexp" hidden></p></div>`).join('')}
     <p class="score" id="quizScore"></p></div>` : ''}
   ${a.desafio ? `<div class="callout"><b>Desafio extra</b>${a.desafio}</div>` : ''}
+  ${X.c ? `<div class="box brain"><span class="lbl">Poder do cérebro</span>${X.c}<p style="margin:6px 0 0;font-size:14px;color:var(--muted)">Não há resposta certa. Pense, anote e, se quiser, discuta com o mentor.</p></div>` : ''}
+  ${X.b && X.b.length ? `<div class="box bala"><span class="lbl">Pontos de bala</span><ul>${X.b.map(i => `<li>${i}</li>`).join('')}</ul></div>` : ''}
   <div class="finish">${P.aulas[a.key] ? `<span class="chip ok">Aula concluída</span><button class="btn ghost" data-undone="${a.key}">Desmarcar</button>` : `<button class="btn good" data-done="${a.key}">Marcar aula como concluída</button><span style="font-size:14px;color:var(--muted)">Conclua quando o exercício estiver no seu repositório.</span>`}</div>
   <div class="pager">${prev?`<a class="btn" href="#${prev.key}">← ${esc(prev.titulo)}</a>`:'<span></span>'}${next?`<a class="btn primary" href="#${next.key}">${esc(next.titulo)} →</a>`:`<a class="btn primary" href="#inicio">Voltar ao início</a>`}</div>`;
 }
@@ -507,11 +550,11 @@ function contextText(){
   if (!ctxObj) return 'O aluno está na página inicial do curso. Fases: ' + C.fases.map(f => `${f.n} ${f.titulo} (${f.semanas})`).join('; ') + '.';
   if (ctxObj.aulas) return `O aluno está na visão geral da ${ctxObj.n==='F'?'etapa de projeto final':'fase '+ctxObj.n}: ${ctxObj.titulo}. Objetivo: ${strip(ctxObj.objetivo)}. Checklist: ${ctxObj.checklist.map(strip).join(' | ')}.`;
   const a = ctxObj;
-  return `Aula ${a.fase.n}.${a.ai+1} "${a.titulo}" da fase "${a.fase.titulo}". Objetivos: ${a.objetivos.map(strip).join('; ')}. Resumo da teoria: ${strip(a.teoria).slice(0, 2500)}. Exercício: ${a.exercicio ? strip(a.exercicio.enunciado).slice(0, 900) : 'nenhum'}. Arquivos da aula (caminhos oficiais): ${aulaPaths(a)}.`;
+  return `Aula ${a.fase.n}.${a.ai+1} "${a.titulo}" da fase "${a.fase.titulo}". Objetivos: ${a.objetivos.map(strip).join('; ')}. Resumo da teoria: ${strip(a.teoria).slice(0, 2500)}. Exercício: ${a.exercicio ? strip(a.exercicio.enunciado).slice(0, 900) : 'nenhum'}. Arquivos da aula (caminhos oficiais): ${aulaPaths(a)}. Pontos-chave: ${((C.extras[a.key]||{}).b||[]).map(strip).join('; ')}.`;
 }
 function aulaPaths(a){ const P = C.paths && C.paths[a.key]; if (!P) return 'não informado'; return [...(P.c||[]), ...(P.x||[]), ...(P.s||[])].filter(e => e[0]==='n'||e[0]==='e').map(e => (e[0]==='n'?'novo ':'editar ') + expand(e[1])).join('; '); }
 function strip(h){ const d = document.createElement('div'); d.innerHTML = h; return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
-const SYS = `Você é o instrutor e mentor de um curso prático de Arquitetura e Desenvolvimento Java, em português do Brasil. O aluno é um coordenador de desenvolvimento de software e professor universitário que quer dominar arquitetura Java. O projeto do curso é o TicketFlow, uma plataforma de venda de ingressos (Java 21, Spring Boot 3/4, PostgreSQL, JUnit 5, Testcontainers, Docker, Kafka/RabbitMQ). Seja direto, didático e honesto: aponte erros com clareza, explique o porquê, mostre código Java moderno curto quando ajudar e termine com um próximo passo prático. Não entregue a solução completa de um exercício se o aluno não pediu: prefira dicas e perguntas que o levem a pensar. O aluno usa o VS Code. Sempre que sugerir código, diga o caminho completo do arquivo a partir da raiz do repositório (ex.: ticketflow-domain/src/main/java/dev/ticketflow/domain/evento/Setor.java), se é arquivo novo ou edição de um existente, e qual linha package usar; comandos são rodados no terminal integrado do VS Code (Ctrl+'), na raiz, com ./mvnw (no Windows, .\\mvnw.cmd). Use atalhos e painéis do VS Code nas orientações (Explorer, Testing, Source Control, Ctrl+., F2, Ctrl+Shift+R). Use Markdown simples (parágrafos, listas, blocos de código com crases triplas).`;
+const SYS = `Você é o instrutor e mentor de um curso prático de Arquitetura e Desenvolvimento Java, em português do Brasil. O aluno é um coordenador de desenvolvimento de software e professor universitário que quer dominar arquitetura Java. O projeto do curso é o TicketFlow, uma plataforma de venda de ingressos (Java 21, Spring Boot 3/4, PostgreSQL, JUnit 5, Testcontainers, Docker, Kafka/RabbitMQ). Escreva no estilo dos livros Use a Cabeça e Casa do Código: conversa direta com o aluno (você), analogias do dia a dia, exemplos concretos no TicketFlow, perguntas que fazem pensar e frases curtas. Seja direto, didático e honesto: aponte erros com clareza, explique o porquê, mostre código Java moderno curto quando ajudar e termine com um próximo passo prático. Não entregue a solução completa de um exercício se o aluno não pediu: prefira dicas e perguntas que o levem a pensar. O aluno usa o VS Code. Sempre que sugerir código, diga o caminho completo do arquivo a partir da raiz do repositório (ex.: ticketflow-domain/src/main/java/dev/ticketflow/domain/evento/Setor.java), se é arquivo novo ou edição de um existente, e qual linha package usar; comandos são rodados no terminal integrado do VS Code (Ctrl+'), na raiz, com ./mvnw (no Windows, .\\mvnw.cmd). Use atalhos e painéis do VS Code nas orientações (Explorer, Testing, Source Control, Ctrl+., F2, Ctrl+Shift+R). Use Markdown simples (parágrafos, listas, blocos de código com crases triplas).`;
 function md(t){
   const blocks = String(t).split(/```(\w*)\n?([\s\S]*?)(?:```|$)/);
   let html = '';

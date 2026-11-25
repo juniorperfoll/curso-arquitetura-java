@@ -1,6 +1,19 @@
 C.intro = `
 <h3>Como este curso funciona</h3>
-<p>Cada aula começa com a lista <b>Arquivos desta aula</b>: caminho completo, nome e o que fazer (criar, editar ou rodar no terminal). Cada bloco de código repete o caminho no topo, com botão para copiar. Cada aula segue o mesmo ciclo: <b>objetivos</b>, <b>teoria curta</b>, <b>código comentado</b>, <b>exercício no TicketFlow</b> (com dicas e gabarito), <b>quiz</b> e, às vezes, um <b>desafio extra</b>. Faça o exercício antes de abrir o gabarito. Quando travar, abra o <b>Mentor</b>: ele conhece a aula aberta, responde dúvidas e revisa o código que você colar.</p>
+<p>Este curso foi escrito para o seu cérebro, não para uma prova. A ideia vem dos livros da série <i>Use a Cabeça!</i> e do jeito prático dos livros da Casa do Código: você aprende melhor quando há uma história, quando precisa pensar antes de ver a resposta, quando vê o mesmo conceito de vários ângulos e quando coloca a mão no código. Por isso cada aula tem as mesmas peças, sempre na mesma ordem:</p>
+<div class="table-wrap"><table><thead><tr><th>Peça</th><th>Para que serve</th></tr></thead><tbody>
+<tr><td><b>Imagine a cena</b></td><td>Uma situação real do TicketFlow que mostra por que o assunto importa, antes de qualquer definição.</td></tr>
+<tr><td><b>Assista</b></td><td>Um ou dois vídeos do YouTube sobre o tema. Veja antes da teoria para ter uma visão geral ou depois para reforçar.</td></tr>
+<tr><td><b>Arquivos desta aula</b></td><td>O caminho completo e o nome de cada arquivo que você vai criar ou editar no VS Code.</td></tr>
+<tr><td><b>Teoria e código comentado</b></td><td>O conceito explicado em linguagem direta, com código Java para estudar e copiar.</td></tr>
+<tr><td><b>Aponte seu lápis</b></td><td>Uma pergunta para responder no papel antes de seguir. Errar aqui é ótimo: o cérebro guarda melhor o que tentou adivinhar.</td></tr>
+<tr><td><b>Não existem perguntas idiotas</b></td><td>As dúvidas que quase todo mundo tem, respondidas sem rodeios.</td></tr>
+<tr><td><b>Mão na massa</b></td><td>O exercício no TicketFlow, com dicas e gabarito comentado.</td></tr>
+<tr><td><b>Quiz</b></td><td>Três perguntas para conferir se o conceito ficou.</td></tr>
+<tr><td><b>Poder do cérebro</b></td><td>Uma reflexão sem resposta certa, ligando o assunto ao seu trabalho.</td></tr>
+<tr><td><b>Pontos de bala</b></td><td>O resumo da aula em quatro frases, para revisar em um minuto.</td></tr>
+</tbody></table></div>
+<p>Quando travar, abra o <b>Mentor</b>: ele conhece a aula aberta, responde dúvidas no mesmo tom do curso e revisa o código que você colar.</p>
 <h3>Regras de ouro</h3>
 <ol>
 <li><b>Um repositório só.</b> Crie <code>ticketflow</code> no GitHub no primeiro dia. Tudo que você fizer no curso vai para lá.</li>
